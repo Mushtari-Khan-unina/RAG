@@ -52,15 +52,19 @@ def summarize_with_rag(query, text):
     summary = summarize_text(combined_text)
     return summary
 
-# Streamlit UI
-st.title("PDF Summarizer with RAG")
-uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
+# Main function to run the app
+def main():
+    st.title("PDF Summarizer with RAG")
+    uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
 
-if uploaded_file is not None:
-    pdf_text = extract_text_from_pdf(uploaded_file)
-    st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
+    if uploaded_file is not None:
+        pdf_text = extract_text_from_pdf(uploaded_file)
+        st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
 
-    if st.button("Summarize"):
-        query = "Summarize this document"
-        summary = summarize_with_rag(query, pdf_text)
-        st.write("Summary:", summary)
+        if st.button("Summarize"):
+            query = "Summarize this document"
+            summary = summarize_with_rag(query, pdf_text)
+            st.write("Summary:", summary)
+
+if __name__ == "__main__":
+    main()
