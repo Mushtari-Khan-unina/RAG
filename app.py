@@ -1,7 +1,6 @@
 import streamlit as st
 from PyPDF2 import PdfReader
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import torch
 
 # Load models and tokenizers
 @st.cache_resource
@@ -22,14 +21,18 @@ def extract_text_from_pdf(pdf_file):
 
 # Summarize text
 def summarize_text(text):
-    # Truncate text if it's too long for the model to handle at once
-    max_length = 4096  # Adjust based on your model's max input size
-    if len(text) > max_length:
-        text = text[:max_length]
     inputs = tokenizer(text, return_tensors="pt", max_length=1024, truncation=True)
     summary_ids = model.generate(inputs["input_ids"], num_beams=4, min_length=30, max_length=200)
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
+
+# Summarize long text by splitting it into chunks
+def summarize_long_text(text, chunk_size=1000):
+    # Split the text into chunks
+    chunks = [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+    summaries = [summarize_text(chunk) for chunk in chunks]
+    combined_summary = " ".join(summaries)
+    return combined_summary
 
 # Main function to run the app
 def main():
@@ -42,7 +45,7 @@ def main():
             st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
 
             if st.button("Summarize"):
-                summary = summarize_text(pdf_text)
+                summary = summarize_long_text(pdf_text)
                 st.write("Summary:", summary)
         else:
             st.error("Failed to extract text from the PDF. Please try another file.")
