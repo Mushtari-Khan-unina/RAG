@@ -5,6 +5,7 @@ from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 import faiss
 import numpy as np
 
+
 # Load models and tokenizers
 @st.cache_resource
 def load_model_and_tokenizer():
