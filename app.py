@@ -27,7 +27,7 @@ def summarize_text(text):
     if len(text) > max_length:
         text = text[:max_length]
     inputs = tokenizer(text, return_tensors="pt", max_length=1024, truncation=True)
-    summary_ids = model.generate(inputs["input_ids"], num_beams=4, min_length=30, max_length=2000)
+    summary_ids = model.generate(inputs["input_ids"], num_beams=4, min_length=30, max_length=200)
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
 
