@@ -2,4 +2,3 @@ streamlit
 PyPDF2
 torch
 transformers
-faiss-cpu
