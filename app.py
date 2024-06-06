@@ -1,10 +1,7 @@
 import streamlit as st
 from PyPDF2 import PdfReader
-import torch
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
-import faiss
-import numpy as np
-
+import torch
 
 # Load models and tokenizers
 @st.cache_resource
@@ -23,53 +20,20 @@ def extract_text_from_pdf(pdf_file):
         pdf_text += page.extract_text()
     return pdf_text
 
-# Build FAISS index
-def build_faiss_index(documents):
-    embeddings = []
-    for doc in documents:
-        encoded_doc = tokenizer.encode(doc, return_tensors='pt')
-        if encoded_doc.size(1) > 0:
-            embeddings.append(encoded_doc[0].detach().numpy())
-        else:
-            st.error("Failed to encode a document chunk. Skipping.")
-            continue
-
-    if not embeddings:
-        st.error("No valid document chunks to build the index.")
-        return None
-
-    dimension = embeddings[0].shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(np.vstack(embeddings))
-    return index
-
-# Retrieve documents
-def retrieve_documents(query, index, documents, k=5):
-    query_embedding = tokenizer.encode(query, return_tensors='pt')[0].detach().numpy().reshape(1, -1)
-    distances, indices = index.search(query_embedding, k)
-    return [documents[i] for i in indices[0]]
-
 # Summarize text
 def summarize_text(text):
+    # Truncate text if it's too long for the model to handle at once
+    max_length = 4096  # Adjust based on your model's max input size
+    if len(text) > max_length:
+        text = text[:max_length]
     inputs = tokenizer(text, return_tensors="pt", max_length=1024, truncation=True)
     summary_ids = model.generate(inputs["input_ids"], num_beams=4, min_length=30, max_length=200)
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summary
 
-# Summarize with RAG
-def summarize_with_rag(query, text):
-    chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
-    index = build_faiss_index(chunks)
-    if index is None:
-        return "Failed to build FAISS index."
-    relevant_docs = retrieve_documents(query, index, chunks)
-    combined_text = " ".join(relevant_docs)
-    summary = summarize_text(combined_text)
-    return summary
-
 # Main function to run the app
 def main():
-    st.title("PDF Summarizer with RAG")
+    st.title("PDF Summarizer")
     uploaded_file = st.file_uploader("Upload a PDF file", type="pdf")
 
     if uploaded_file is not None:
@@ -78,8 +42,7 @@ def main():
             st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
 
             if st.button("Summarize"):
-                query = "Summarize this document"
-                summary = summarize_with_rag(query, pdf_text)
+                summary = summarize_text(pdf_text)
                 st.write("Summary:", summary)
         else:
             st.error("Failed to extract text from the PDF. Please try another file.")
