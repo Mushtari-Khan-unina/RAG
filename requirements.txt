@@ -1,10 +1,5 @@
-langchain
-faiss-cpu
-sentence-transformers==2.2.2
-InstructorEmbedding
-pypdf
 streamlit
-pynvml
+PyPDF2
 torch
-python-dotenv
-langchain_community
+transformers
+faiss-cpu
