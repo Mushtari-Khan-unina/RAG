@@ -24,7 +24,19 @@ def extract_text_from_pdf(pdf_file):
 
 # Build FAISS index
 def build_faiss_index(documents):
-    embeddings = [tokenizer.encode(doc, return_tensors='pt')[0].detach().numpy() for doc in documents]
+    embeddings = []
+    for doc in documents:
+        encoded_doc = tokenizer.encode(doc, return_tensors='pt')
+        if encoded_doc.size(1) > 0:
+            embeddings.append(encoded_doc[0].detach().numpy())
+        else:
+            st.error("Failed to encode a document chunk. Skipping.")
+            continue
+
+    if not embeddings:
+        st.error("No valid document chunks to build the index.")
+        return None
+
     dimension = embeddings[0].shape[1]
     index = faiss.IndexFlatL2(dimension)
     index.add(np.vstack(embeddings))
@@ -47,6 +59,8 @@ def summarize_text(text):
 def summarize_with_rag(query, text):
     chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
     index = build_faiss_index(chunks)
+    if index is None:
+        return "Failed to build FAISS index."
     relevant_docs = retrieve_documents(query, index, chunks)
     combined_text = " ".join(relevant_docs)
     summary = summarize_text(combined_text)
@@ -59,12 +73,15 @@ def main():
 
     if uploaded_file is not None:
         pdf_text = extract_text_from_pdf(uploaded_file)
-        st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
+        if pdf_text.strip():
+            st.write("Extracted Text Preview:", pdf_text[:500])  # Show part of the extracted text
 
-        if st.button("Summarize"):
-            query = "Summarize this document"
-            summary = summarize_with_rag(query, pdf_text)
-            st.write("Summary:", summary)
+            if st.button("Summarize"):
+                query = "Summarize this document"
+                summary = summarize_with_rag(query, pdf_text)
+                st.write("Summary:", summary)
+        else:
+            st.error("Failed to extract text from the PDF. Please try another file.")
 
 if __name__ == "__main__":
     main()
