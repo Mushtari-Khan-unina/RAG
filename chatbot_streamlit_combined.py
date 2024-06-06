@@ -45,8 +45,7 @@ def main():
 
     elif selection == "RAG Chatbot":
         display_chatbot_page()
-   
-
+  
 def display_chatbot_page():
 
     st.title("Multi Source Chatbot")
@@ -64,10 +63,8 @@ def display_chatbot_page():
             row_1 = st.columns(3)
             with row_1[0]:
                 text = st.text_input("Hugging Face Token (No need to insert)", type='password',value= f"{'*' * len(os.getenv('API_KEY'))}")
-
             with row_1[1]:
                 llm_model = st.text_input("LLM model", value="tiiuae/falcon-7b-instruct")
-
             with row_1[2]:
                 instruct_embeddings = st.text_input("Instruct Embeddings", value="sentence-transformers/all-MiniLM-L6-v2")
 
@@ -222,8 +219,6 @@ def display_document_embedding_page():
 
         else:
             st.warning("Please upload at least one file.")
-
-
 
 if __name__ == "__main__":
     main()
