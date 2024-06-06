@@ -7,3 +7,4 @@ streamlit
 pynvml
 torch
 python-dotenv
+langchain_community
